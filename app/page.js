@@ -3,9 +3,17 @@ import { useState } from "react";
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  let [response, setResponse] = useState([]);
-  const api_url =`https://api.github.com/search/users?q=${search}&per_page=5`;
-  console.log(api_url)
+  const [response, setResponse] = useState([]);
+
+  const handleSearch = async (e) => {
+    e.preventDefault()
+    // dynamically load the axios dependency
+    const axios = (await import("axios")).default;
+    const result = await axios.get(`https://api.github.com/search/users?q=${search}`).then((res) => {
+        setResponse(res.data);
+    });
+  }
+ 
   return (
       <div className="w-3/4 mx-auto my-10">
         <h1 className="lg:text-xl text-lg pb-4">Search Github Users:</h1>
@@ -23,14 +31,7 @@ export default function Home() {
               placeholder="Search Github Users..." 
               required/>
               <button 
-              onClick={async (e) => {
-                e.preventDefault()
-                // dynamically load the axios dependency
-                const axios = (await import("axios")).default;
-                const result = await axios.get(api_url).then((res) => {
-                  setResponse(res.data);
-                });
-              }}
+              onClick={(e)=>handleSearch(e)}
               className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2">
               Search</button>
           </div>
@@ -44,15 +45,18 @@ export default function Home() {
                 <p className="p-2 w-1/3">Repositories Url</p>
             </div>
             {response ? (
-              response && response?.items?.map((item, index) => (
-                <div key={index}className="flex even:bg-gray-200 hover:bg-gray-200/50">
+              <>{response && response?.items?.map((item, index) => (
+                <div key={index} className="flex even:bg-gray-200 hover:bg-gray-200/50">
                   <p className="p-2 w-1/3 break-words">{item?.login}</p>
                   <p className="p-2 w-1/3 break-words">{item?.html_url}</p>
                   <p className="p-2 w-1/3 break-words">{item?.repos_url}</p>
                 </div>
-              ))
+              ))}
+              {response.items && 
+              <p className="text-blue-800 font-bold">You got {response.items.length} users</p>
+              }</>  
             ) : (
-              <p>No Results</p>
+                <p>No Results</p>
             )}
         </div>
       </div>
